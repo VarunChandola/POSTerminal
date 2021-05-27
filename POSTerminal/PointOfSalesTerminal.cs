@@ -1,14 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using POSTerminal.DataModels;
+using POSTerminal.Exceptions;
+using POSTerminal.Repositories;
 
 namespace POSTerminal
 {
     public class PointOfSalesTerminal : IPointOfSalesTerminal
     {
-        private readonly Dictionary<string, ScannedProductDetails> _scannedItems = new();
+        private readonly ShoppingCart _cart = new();
         private readonly IProductRepository _itemRepository;
 
         public PointOfSalesTerminal(IProductRepository itemRepository)
@@ -16,43 +15,16 @@ namespace POSTerminal
             _itemRepository = itemRepository;
         }
 
-        public async Task ScanProduct(string productCode)
+        public async Task ScanProductAsync(string productCode)
         {
-            var item = await _itemRepository.GetProductByCode(productCode);
-            if (item == null)
-            {
-                throw new ProductNotFoundException(productCode);
-            }
-
-            if (!_scannedItems.TryGetValue(productCode, out ScannedProductDetails? itemDetails))
-            {
-                itemDetails = new ScannedProductDetails {Product = item};
-                _scannedItems[productCode] = itemDetails;
-            }
-
-            itemDetails.Qty += 1;
+            Product product = await _itemRepository.GetProductByCode(productCode) ??
+                              throw new ProductNotFoundException(productCode);
+            _cart.Add(product);
         }
 
         public double CalculateTotal()
         {
-            return PriceCalculator.CalculatePrice(_scannedItems.Values.ToList());
-        }
-
-        public void StartSession()
-        {
-            _scannedItems.Clear();
-        }
-
-        public void EndSession()
-        {
-            _scannedItems.Clear();
-        }
-    }
-
-    public class ProductNotFoundException : Exception
-    {
-        public ProductNotFoundException(string productCode) : base($"Product with code {productCode} does not exist")
-        {
+            return PriceCalculator.CalculatePrice(_cart.Contents);
         }
     }
 }

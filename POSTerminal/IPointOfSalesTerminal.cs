@@ -4,9 +4,7 @@ namespace POSTerminal
 {
     public interface IPointOfSalesTerminal
     {
-        Task ScanProduct(string productCode);
+        Task ScanProductAsync(string productCode);
         double CalculateTotal();
-        void StartSession();
-        void EndSession();
     }
 }

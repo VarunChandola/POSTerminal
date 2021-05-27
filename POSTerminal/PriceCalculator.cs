@@ -4,24 +4,23 @@ using POSTerminal.DataModels;
 
 namespace POSTerminal
 {
-    public class PriceCalculator
+    public static class PriceCalculator
     {
-        public static double CalculatePrice(List<ScannedProductDetails> scannedProducts)
+        public static double CalculatePrice(List<ProductDetails> products)
         {
             double total = 0;
-            foreach (var item in scannedProducts)
+            foreach (var productDetails in products)
             {
-                var product = item.Product;
+                Product product = productDetails.Product;
                 var bulkPricing = product.BulkPricing;
-
                 if (bulkPricing != null)
                 {
-                    var batchCount = Math.DivRem(item.Qty, bulkPricing.Qty, out int remainingUnits);
+                    var batchCount = Math.DivRem(productDetails.Qty, bulkPricing.Qty, out var remainingUnits);
                     total += batchCount * bulkPricing.Price + remainingUnits * product.UnitPrice;
                 }
                 else
                 {
-                    total += item.Qty * product.UnitPrice;
+                    total += productDetails.Qty * product.UnitPrice;
                 }
             }
 
